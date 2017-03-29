@@ -1,0 +1,39 @@
+module.exports = {
+    "extends": [
+        "airbnb"
+    ],
+    "parser": "babel-eslint",
+    "plugins": [
+        "react"
+    ],
+    "rules": {
+        "max-len": ["error", 200],
+        "no-underscore-dangle": 0,
+        "object-curly-spacing": 0,
+        "arrow-parens": 0,
+        "prefer-arrow-callback": 2,
+
+        "react/prefer-es6-class": 0,
+        "react/prefer-stateless-function": 0,
+        "react/forbid-prop-types": 0,
+        "react/jsx-filename-extension": 0,
+        "react/jsx-indent": 0,
+
+        "import/order": ["error", {"newlines-between": "always"}],
+        "import/no-unresolved": 2,
+        "import/named": 2,
+        "import/namespace": 2,
+        "import/default": 2,
+        "import/export": 2,
+        "import/no-named-as-default": 2,
+        "import/no-named-as-default-member": 2,
+        "import/no-duplicates": 2
+    },
+    "globals": {
+        "__DEV__": true
+    },
+    "env": {
+        "node": true,
+        "browser": true
+    }
+};
