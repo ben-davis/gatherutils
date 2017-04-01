@@ -1,10 +1,8 @@
+import 'babel-polyfill';
+
 import querystring from 'querystring';
 
-import Config from 'react-native-config';
 import Immutable from 'immutable';
-import {
-  AsyncStorage,
-} from 'react-native';
 
 
 const BASE = 'https://api.readgather.com';
@@ -12,35 +10,31 @@ const BASE = 'https://api.readgather.com';
 const ApiUtils = {
 
   _getToken() {
-    return AsyncStorage.getItem(
-      'session',
-    ).then(data => {
-      if (data) {
-        const session = JSON.parse(data);
+    const data = localStorage.getItem('session');
 
-        if (!session.token) {
-          return AsyncStorage.removeItem('session');
-        }
+    if (data) {
+      const session = JSON.parse(data);
 
-        return `Token ${session.token}`;
+      if (!session.token) {
+        return localStorage.removeItem('session');
       }
 
-      return null;
-    });
+      return `Token ${session.token}`;
+    }
+
+    return null;
   },
 
   _getVersion() {
-    return AsyncStorage.getItem(
-      'gatherVersion',
-    ).then(data => {
-      if (data) {
-        const version = JSON.parse(data);
+    const data = localStorage.getItem('gatherVersion');
 
-        return version;
-      }
+    if (data) {
+      const version = JSON.parse(data);
 
-      return null;
-    });
+      return version;
+    }
+
+    return null;
   },
 
   async _handleResponse(requestData, response) {
@@ -74,10 +68,12 @@ const ApiUtils = {
     const headers = {
       Accept: 'application/json',
       'Content-Type': contentType,
-      X_GATHER_VERSION: version,
     };
     if (token) {
       headers.Authorization = token;
+    }
+    if (version) {
+      headers.X_GATHER_VERSION = version;
     }
 
     return headers;

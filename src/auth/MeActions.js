@@ -1,5 +1,3 @@
-import Immutable from 'immutable';
-
 import EventTypes from './EventTypes';
 import ActionTypes from './ActionTypes';
 import MeService from './MeService';
@@ -14,21 +12,25 @@ const MeActions = {
         promise: MeService.createSession(data, backend),
         data,
       },
-    }).then(({ value: session }) => dispatch({
-      type: ActionTypes.ANALYTICS,
-      meta: {
-        analytics: {
-          eventType: EventTypes.LOG_IN,
-          paramaters: {
-            name: session.user.username,
-            email: session.user.email,
-            username: session.user.username,
-            id: session.user.id,
-            isNew: session.is_new,
+    }).then(({ value: session }) => {
+      localStorage.setItem('session', JSON.stringify(session));
+
+      dispatch({
+        type: ActionTypes.ANALYTICS,
+        meta: {
+          analytics: {
+            eventType: EventTypes.LOG_IN,
+            paramaters: {
+              name: session.user.username,
+              email: session.user.email,
+              username: session.user.username,
+              id: session.user.id,
+              isNew: session.is_new,
+            },
           },
         },
-      },
-    }));
+      });
+    });
   },
 
   getMe() {
