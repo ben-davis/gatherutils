@@ -115,7 +115,6 @@ const ApiUtils = {
       fullUrl = `${fullUrl}?${stringifiedQuery}`;
     }
 
-
     const headers = await this._getHeaders();
 
     return this._fetch(fullUrl, {

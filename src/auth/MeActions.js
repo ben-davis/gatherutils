@@ -9,12 +9,18 @@ const MeActions = {
     return dispatch => dispatch({
       type: ActionTypes.CREATE_SESSION,
       payload: {
-        promise: MeService.createSession(data, backend),
+        promise: new Promise(async (resolve, reject) => {
+          try {
+            const session = await MeService.createSession(data, backend);
+            localStorage.setItem('session', JSON.stringify(session));
+            resolve(session);
+          } catch (error) {
+            reject(error);
+          }
+        }),
         data,
       },
     }).then(({ value: session }) => {
-      localStorage.setItem('session', JSON.stringify(session));
-
       dispatch({
         type: ActionTypes.ANALYTICS,
         meta: {

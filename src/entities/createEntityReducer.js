@@ -15,9 +15,11 @@ function _getListSlug(action) {
 }
 
 
-function createEntityReducer(entityName) {
-  const DETAIL_ACTION_TYPE = `__GATHER_FETCH_${entityName.toUpperCase()}_DETAIL`;
-  const LIST_ACTION_TYPE = `__GATHER_FETCH_${entityName.toUpperCase()}_LIST`;
+function createEntityReducer(entityName, options = {}) {
+  const {
+    detailActionType = `@@GATHER_FETCH_${entityName.toUpperCase()}_DETAIL`,
+    listActionType = `@@GATHER_FETCH_${entityName.toUpperCase()}_LIST`,
+  } = options;
 
   const ENTITY_KEY = 'entities';
   const ENTITY_LIST_KEY = 'lists';
@@ -29,7 +31,7 @@ function createEntityReducer(entityName) {
 
   return createReducer({
 
-    [DETAIL_ACTION_TYPE]: {
+    [detailActionType]: {
       PENDING(state, action) {
         const {id} = action.meta;
 
@@ -80,7 +82,7 @@ function createEntityReducer(entityName) {
       },
     },
 
-    [LIST_ACTION_TYPE]: {
+    [listActionType]: {
       PENDING(state, action) {
         const slug = _getListSlug(action);
 

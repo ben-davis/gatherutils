@@ -6,8 +6,8 @@ import Api from '../Api';
 function createEntityActionCreators(config) {
   const {entityName, baseUrl, itemsKey} = config;
 
-  const DETAIL_ACTION_TYPE = `__GATHER_FETCH_${entityName.toUpperCase()}_DETAIL`;
-  const LIST_ACTION_TYPE = `__GATHER_FETCH_${entityName.toUpperCase()}_LIST`;
+  const DETAIL_ACTION_TYPE = `@@GATHER_FETCH_${entityName.toUpperCase()}_DETAIL`;
+  const LIST_ACTION_TYPE = `@@GATHER_FETCH_${entityName.toUpperCase()}_LIST`;
 
   const entitySchema = new schema.Entity(entityName);
 
