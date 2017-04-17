@@ -1,5 +1,3 @@
-import 'babel-polyfill';
-
 import querystring from 'querystring';
 
 import Immutable from 'immutable';
