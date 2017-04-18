@@ -86,7 +86,7 @@ function createEntityReducer(entityName, options = {}) {
       PENDING(state, action) {
         const slug = _getListSlug(action);
 
-        const existingList = state.getIn([ENTITY_LIST_KEY, slug]);
+        const existingList = state.getIn([ENTITY_LIST_KEY, slug, 'list']);
 
         return state.mergeIn([ENTITY_LIST_KEY, slug], Immutable.Map({
           slug,
