@@ -44,6 +44,10 @@ const MeService = {
     return Api.post('/me/notification/read');
   },
 
+  requestInvite(data) {
+    return Api.post('/auth/request_invite', data);
+  },
+
 };
 
 export default MeService;

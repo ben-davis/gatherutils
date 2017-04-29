@@ -101,6 +101,13 @@ const MeActions = {
     };
   },
 
+  requestInvite(data) {
+    return {
+      type: ActionTypes.REQUEST_INVITE,
+      payload: MeService.requestInvite(data),
+    };
+  },
+
 };
 
 export default MeActions;
