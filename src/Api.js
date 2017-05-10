@@ -3,7 +3,7 @@ import querystring from 'querystring';
 import Immutable from 'immutable';
 
 
-const BASE = 'https://api.gatherdata.co';
+const BASE = process.env.GATHER_API_BASE || 'https://api.gatherdata.co';
 
 const ApiUtils = {
 
