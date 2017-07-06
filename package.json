@@ -1,7 +1,6 @@
 {
   "name": "gather-utils",
-  "version": "0.1.6",
-  "private": true,
+  "version": "0.1.8",
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
@@ -14,26 +13,42 @@
     "babel-runtime": "6.23.0",
     "create-react-class": "15.5.2",
     "immutable": "^3.8.1",
+    "lodash": "4.17.4",
     "normalizr": "^3.2.2",
     "react": "15.5.4",
     "type-to-reducer": "1.0.3"
   },
   "devDependencies": {
-    "babel-plugin-transform-runtime": "6.23.0",
     "babel-cli": "^6.24.0",
-    "babel-eslint": "7.2.1",
+    "babel-eslint": "^7.2.3",
     "babel-plugin-transform-async-to-generator": "6.22.0",
+    "babel-plugin-transform-runtime": "6.23.0",
     "babel-preset-env": "1.2.2",
     "babel-preset-flow": "^6.23.0",
-    "eslint": "3.18.0",
-    "eslint-config-airbnb": "14.1.0",
-    "eslint-plugin-import": "2.2.0",
-    "eslint-plugin-jsx-a11y": "4.0.0",
-    "eslint-plugin-react": "6.10.3",
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb": "^15.0.2",
+    "eslint-plugin-import": "^2.6.1",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-react": "^7.1.0",
     "flow-bin": "^0.42.0"
   },
   "peerDependencies": {
     "immutable": "3.8.1",
     "react": "*"
-  }
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ben-davis/gatherutils.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ben-davis/gatherutils/issues"
+  },
+  "homepage": "https://github.com/ben-davis/gatherutils#readme",
+  "description": ""
 }

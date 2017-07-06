@@ -1,5 +1,3 @@
-// @flow
-
 import createReducer from 'type-to-reducer';
 import Immutable from 'immutable';
 
@@ -18,6 +16,8 @@ function _getListSlug(action) {
 function createEntityReducer(entityName, options = {}) {
   const {
     detailActionType = `@@GATHER_FETCH_${entityName.toUpperCase()}_DETAIL`,
+    createActionType = `@@GATHER_CREATE_${entityName.toUpperCase()}`,
+    patchActionType = `@@GATHER_PATCH_${entityName.toUpperCase()}`,
     listActionType = `@@GATHER_FETCH_${entityName.toUpperCase()}_LIST`,
   } = options;
 
@@ -29,58 +29,81 @@ function createEntityReducer(entityName, options = {}) {
     [ENTITY_LIST_KEY]: new Immutable.Map(),
   });
 
+  const handleEntityUpdate = {
+    PENDING(state, action) {
+      const entity = action.payload;
+      const {noSave} = action.meta;
+      let {id} = action.meta;
+
+      id = parseInt(id, 10);
+      if (!id) {
+        throw new Error('Pending actions must contain an id as part of the action meta when using EntityReducers');
+      }
+
+      if (noSave) {
+        return state;
+      }
+
+      const existingEntity = state.getIn([ENTITY_KEY, id, entityName]);
+
+      return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
+        id,
+        [entityName]: Immutable.fromJS(entity) || existingEntity || null,
+        error: null,
+        status: existingEntity ? Status.RELOADING : Status.PENDING,
+      }));
+    },
+
+    SUCCESS(state, action) {
+      const entity = action.payload;
+      const {noSave} = action.meta;
+      let {id} = action.meta;
+      id = parseInt(id, 10);
+
+      if (!id) {
+        throw new Error('Success actions must contain an id as part of the action meta when using EntityReducers');
+      }
+
+      if (noSave) {
+        return state;
+      }
+
+      return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
+        status: Status.SUCCESS,
+        [entityName]: Immutable.fromJS(entity),
+      }));
+    },
+
+    ERROR(state, action) {
+      const {error} = action.payload;
+      const {noSave} = action.meta;
+      let {id} = action.meta;
+      id = parseInt(id, 10);
+
+      if (!error) {
+        throw new Error('Error actions must contain an error as part of the action when using EntityReducers');
+      }
+
+      if (!id) {
+        throw new Error('Error actions must contain an id as part of the action meta when using EntityReducers');
+      }
+
+      if (noSave) {
+        return state;
+      }
+
+      return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
+        error,
+        status: Status.ERROR,
+      }));
+    },
+  };
+
   return createReducer({
 
-    [detailActionType]: {
-      PENDING(state, action) {
-        const {id} = action.meta;
-
-        if (!id) {
-          throw new Error('Pending actions must contain an id as part of the action meta when using EntityReducers');
-        }
-
-        const existingEntity = state.getIn([ENTITY_KEY, id]);
-
-        return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
-          id,
-          [entityName]: existingEntity || null,
-          error: null,
-          status: existingEntity ? Status.RELOADING : Status.PENDING,
-        }));
-      },
-
-      SUCCESS(state, action) {
-        const entity = action.payload;
-        const {id} = action.meta;
-
-        if (!id) {
-          throw new Error('Success actions must contain an id as part of the action meta when using EntityReducers');
-        }
-
-        return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
-          status: Status.SUCCESS,
-          [entityName]: Immutable.fromJS(entity),
-        }));
-      },
-
-      ERROR(state, action) {
-        const {error} = action.payload;
-        const {id} = action.meta;
-
-        if (!error) {
-          throw new Error('Error actions must contain an error as part of the action when using EntityReducers');
-        }
-
-        if (!id) {
-          throw new Error('Error actions must contain an id as part of the action meta when using EntityReducers');
-        }
-
-        return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
-          error,
-          status: Status.ERROR,
-        }));
-      },
-    },
+    [detailActionType]: handleEntityUpdate,
+    [createActionType]: handleEntityUpdate,
+    [patchActionType]: handleEntityUpdate,
 
     [listActionType]: {
       PENDING(state, action) {
