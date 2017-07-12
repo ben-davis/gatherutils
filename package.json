@@ -1,6 +1,6 @@
 {
   "name": "gather-utils",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src -d lib",
@@ -22,8 +22,9 @@
     "babel-cli": "^6.24.0",
     "babel-eslint": "^7.2.3",
     "babel-plugin-transform-async-to-generator": "6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-plugin-transform-runtime": "6.23.0",
-    "babel-preset-env": "1.2.2",
+    "babel-preset-env": "^1.6.0",
     "babel-preset-flow": "^6.23.0",
     "eslint": "^3.19.0",
     "eslint-config-airbnb": "^15.0.2",

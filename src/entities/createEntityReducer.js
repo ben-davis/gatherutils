@@ -3,15 +3,13 @@ import Immutable from 'immutable';
 
 import Status from '../Status';
 
-
 function _getListSlug(action) {
   if (action.meta) {
-    return action.meta.slug && 'default';
+    return action.meta.slug || 'default';
   }
 
   return 'default';
 }
-
 
 function createEntityReducer(entityName, options = {}) {
   const {
@@ -19,6 +17,8 @@ function createEntityReducer(entityName, options = {}) {
     createActionType = `@@GATHER_CREATE_${entityName.toUpperCase()}`,
     patchActionType = `@@GATHER_PATCH_${entityName.toUpperCase()}`,
     listActionType = `@@GATHER_FETCH_${entityName.toUpperCase()}_LIST`,
+    additionalInitialState = Immutable.Map({}),
+    additionalActionHandlers = {},
   } = options;
 
   const ENTITY_KEY = 'entities';
@@ -27,18 +27,35 @@ function createEntityReducer(entityName, options = {}) {
   const initialState = Immutable.Map({
     [ENTITY_KEY]: new Immutable.Map(),
     [ENTITY_LIST_KEY]: new Immutable.Map(),
-  });
+    createStatus: Status.INITIAL,
+  }).merge(additionalInitialState);
 
   const handleEntityUpdate = {
-    PENDING(state, action) {
-      const entity = action.payload;
-      const {noSave} = action.meta;
-      let {id} = action.meta;
+    _validateAction(action) {
+      const { type, payload: entity, meta = {} } = action;
+      let id = meta.id || entity.id;
 
-      id = parseInt(id, 10);
+      const error = entity;
+      const { noSave } = meta;
+
+      id = parseInt(id, 10) || id;
       if (!id) {
-        throw new Error('Pending actions must contain an id as part of the action meta when using EntityReducers');
+        throw new Error(
+          'Actions must contain an id as part of the action meta when using EntityReducers',
+        );
       }
+
+      return {
+        id,
+        type,
+        entity,
+        noSave,
+        error,
+      };
+    },
+
+    PENDING(state, action) {
+      const { id, entity, noSave } = handleEntityUpdate._validateAction(action);
 
       if (noSave) {
         return state;
@@ -46,103 +63,136 @@ function createEntityReducer(entityName, options = {}) {
 
       const existingEntity = state.getIn([ENTITY_KEY, id, entityName]);
 
-      return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
-        id,
-        [entityName]: Immutable.fromJS(entity) || existingEntity || null,
-        error: null,
-        status: existingEntity ? Status.RELOADING : Status.PENDING,
-      }));
+      let entityToSave = null;
+      if (entity) {
+        entityToSave = Immutable.fromJS(entity);
+      } else if (existingEntity) {
+        entityToSave = existingEntity;
+      }
+
+      return state.mergeIn(
+        [ENTITY_KEY, id],
+        Immutable.Map({
+          id,
+          [entityName]: entityToSave,
+          error: null,
+          status: entityToSave ? Status.RELOADING : Status.PENDING,
+        }),
+      );
     },
 
     SUCCESS(state, action) {
-      const entity = action.payload;
-      const {noSave} = action.meta;
-      let {id} = action.meta;
-      id = parseInt(id, 10);
-
-      if (!id) {
-        throw new Error('Success actions must contain an id as part of the action meta when using EntityReducers');
-      }
+      const { id, entity, noSave } = handleEntityUpdate._validateAction(action);
 
       if (noSave) {
         return state;
       }
 
-      return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
-        status: Status.SUCCESS,
-        [entityName]: Immutable.fromJS(entity),
-      }));
+      return state.mergeIn(
+        [ENTITY_KEY, id],
+        Immutable.Map({
+          status: Status.SUCCESS,
+          [entityName]: Immutable.fromJS(entity),
+        }),
+      );
     },
 
     ERROR(state, action) {
-      const {error} = action.payload;
-      const {noSave} = action.meta;
-      let {id} = action.meta;
-      id = parseInt(id, 10);
-
-      if (!error) {
-        throw new Error('Error actions must contain an error as part of the action when using EntityReducers');
-      }
-
-      if (!id) {
-        throw new Error('Error actions must contain an id as part of the action meta when using EntityReducers');
-      }
+      const { id, error, noSave } = handleEntityUpdate._validateAction(action);
 
       if (noSave) {
         return state;
       }
 
-      return state.mergeIn([ENTITY_KEY, id], Immutable.Map({
-        error,
-        status: Status.ERROR,
-      }));
+      if (!error) {
+        throw new Error(
+          'Error actions must contain an error as part of the action when using EntityReducers',
+        );
+      }
+
+      return state.mergeIn(
+        [ENTITY_KEY, id],
+        Immutable.Map({
+          error,
+          status: Status.ERROR,
+        }),
+      );
     },
   };
 
-  return createReducer({
+  return createReducer(
+    {
+      [detailActionType]: handleEntityUpdate,
+      [patchActionType]: handleEntityUpdate,
+      [createActionType]: {
+        PENDING(state) {
+          return state.set('createStatus', status.PENDING);
+        },
 
-    [detailActionType]: handleEntityUpdate,
-    [createActionType]: handleEntityUpdate,
-    [patchActionType]: handleEntityUpdate,
+        SUCCESS(state, action) {
+          return handleEntityUpdate
+            .SUCCESS(state, action)
+            .set('createStatus', status.SUCCESS);
+        },
 
-    [listActionType]: {
-      PENDING(state, action) {
-        const slug = _getListSlug(action);
-
-        const existingList = state.getIn([ENTITY_LIST_KEY, slug, 'list']);
-
-        return state.mergeIn([ENTITY_LIST_KEY, slug], Immutable.Map({
-          slug,
-          error: null,
-          list: existingList || null,
-          status: existingList ? Status.RELOADING : Status.PENDING,
-        }));
+        ERROR(state, action) {
+          const error = action.payload;
+          return state.merge('createStatus', {
+            error,
+            status: status.ERROR,
+          });
+        },
       },
 
-      SUCCESS(state, action) {
-        const slug = _getListSlug(action);
+      [listActionType]: {
+        PENDING(state, action) {
+          const slug = _getListSlug(action);
 
-        const {list} = action.payload;
+          const existingList = state.getIn([ENTITY_LIST_KEY, slug, 'list']);
 
-        return state.mergeIn([ENTITY_LIST_KEY, slug], Immutable.Map({
-          list: Immutable.fromJS(list),
-          status: Status.SUCCESS,
-        }));
+          return state.mergeIn(
+            [ENTITY_LIST_KEY, slug],
+            Immutable.Map({
+              slug,
+              error: null,
+              list: existingList || null,
+              status: existingList ? Status.RELOADING : Status.PENDING,
+            }),
+          );
+        },
+
+        SUCCESS(state, action) {
+          const slug = _getListSlug(action);
+
+          const { list } = action.payload;
+
+          return state.mergeIn(
+            [ENTITY_LIST_KEY, slug],
+            Immutable.Map({
+              list: Immutable.fromJS(list),
+              status: Status.SUCCESS,
+            }),
+          );
+        },
+
+        ERROR(state, action) {
+          const slug = _getListSlug(action);
+
+          const error = action.payload;
+
+          return state.mergeIn(
+            [ENTITY_LIST_KEY, slug],
+            Immutable.Map({
+              error,
+              status: Status.ERROR,
+            }),
+          );
+        },
       },
-
-      ERROR(state, action) {
-        const slug = _getListSlug(action);
-
-        const error = action.payload;
-
-        return state.mergeIn([ENTITY_LIST_KEY, slug], Immutable.Map({
-          error,
-          status: Status.ERROR,
-        }));
-      },
+      ...additionalActionHandlers,
     },
-
-  }, initialState);
+    initialState,
+  );
 }
 
 export default createEntityReducer;
